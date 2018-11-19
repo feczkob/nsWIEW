@@ -1,0 +1,11 @@
+function bckout=bckdel(bck, indxtosave)
+indx=setdiff(1:length(bck.data), indxtosave);
+bckout=bck;
+bckout.data(indx)=[];
+bckout.fdata(indx)=[];
+bckout.rmsfdata(indx)=[];
+bckout.rectfdata(indx)=[];
+bckout.maxsrms(indx)=[];
+bckout.maxsrect(indx)=[];
+bckout.peaks(indx)=[];
+bckout.troughs(indx)=[];
