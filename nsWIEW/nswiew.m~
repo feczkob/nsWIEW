@@ -5682,7 +5682,7 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 
 %[filename, pathname] = uigetfile('*.*','Select file');
 %load([pathname filename], 'inspk', 'cluster_class');
-%még nincs kész
+%még n
 if ~isempty(handles.SUApath)
     %handles.coeff_vs_coeff_name = ['times_polytrode' handles.channel '.mat'];
     Gui_plot_coeffs;

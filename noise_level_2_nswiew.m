@@ -1,4 +1,4 @@
-function [ fig_noise ] = noise_level_2_nswiew( polytrode_n, log_deblock)
+function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, log_deblock, path)
 % Create a variable, that contains the noise levels for each
 % channel and also the corresponding time vector.
 % Both should take a stepfunction form.
@@ -12,7 +12,8 @@ function [ fig_noise ] = noise_level_2_nswiew( polytrode_n, log_deblock)
 factor = 4;
 
 %% Load data, initialize
-load(['polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par');
+load([path '/' 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par')
+load(log_deblock);
 fileID = fopen(['polytrode' num2str(polytrode_n) '.txt'],'r');
 tline = fgetl(fileID);
 tlines = cell(0,1);
@@ -63,6 +64,7 @@ t_step = t_rshp(2:end-1)';
 
 %%   We have to shift the elements of t_step using log_deblock
 t_dp_thr = t_step;
+log_deblock = segments;
 for i = 1:size(log_deblock,1)
         % get start and endpoint for deblocking
         block_start = log_deblock(i,1);
@@ -72,11 +74,11 @@ for i = 1:size(log_deblock,1)
 end
 
 %% Plot the staff, to check, if works or not!
-fig_noise = figure('Name', ['Detection noise-level of polytrode ', num2str(polytrode_n)],'units','normalized','outerposition',[0 0 1 1]);
-hold on
-plot(t_dp_thr./par.sr,thr_step);
+%fig_noise = figure('Name', ['Detection noise-level of polytrode ', num2str(polytrode_n)],'units','normalized','outerposition',[0 0 1 1]);
+%hold on
+%plot(t_dp_thr./par.sr,thr_step);
 
-yl = ylim;
+%yl = ylim;
 % plot vertical lines between each epoch
 %{
 for i = 1:15
@@ -89,10 +91,10 @@ for i = 1:size(log_deblock,1)
     block_start = log_deblock(i,1)/par.sr;
     block_end = log_deblock(i,2)/par.sr;
     length_block = block_end-block_start;
-    rectangle('Position',[block_start,yl(1),length_block,(yl(2)-yl(1))],...
-        'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
+    %rectangle('Position',[block_start,yl(1),length_block,(yl(2)-yl(1))],...
+    %    'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
 end
-
-save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
+%% save the data: not needed
+%save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
 end
 
