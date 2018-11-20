@@ -5644,7 +5644,9 @@ end
 ch = str2num(answer{1});
 ch1 = ch(1);
 ch2 = ch(end);
+if exist('log_deblock.mat') == 2
 filename_log_deblock = 'log_deblock.mat';
+end
 
 %korábban volt ez
 %[fname, path]=uigetfile({'*.mat', 'ns_times_polytrode; *.mat'}, 'Select the unit file');
@@ -5660,7 +5662,8 @@ handles.SUApath=path;
 handles.channel = ch1;
 
 %% noise level
-
+%for i = ch1 : ch2
+%if exist('polytrode' i '_spikes.mat') == 2
 [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(ch1, filename_log_deblock, path);
     handles.thr(1).t_dp_thr = t_dp_thr; 
     handles.thr(1).thr_step = thr_step;
@@ -5668,7 +5671,7 @@ handles.channel = ch1;
     handles.thr(1).ch_id = ch_id;
     handles.thr(1).filename= ['polytrode' num2str(ch1) '_spikes.mat'];
     handles.thr(1).path=path;
-
+%end
 handles=draw(handles.data,handles);
 guidata(h,handles);
 disp(' ')
