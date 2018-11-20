@@ -5641,8 +5641,9 @@ if ~isempty(answer)
         handles.page{end+1}=str2num(answer{1});
     end
 end
-ch1 = str2double(answer{1}(1));
-ch2 = str2double(answer{1}(end));
+ch = str2num(answer{1});
+ch1 = ch(1);
+ch2 = ch(end);
 filename_log_deblock = 'log_deblock.mat';
 
 %korábban volt ez
@@ -5659,14 +5660,15 @@ handles.SUApath=path;
 handles.channel = ch1;
 
 %% noise level
+
 [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(ch1, filename_log_deblock, path);
-handles.thr(1).t_dp_thr = t_dp_thr; 
+    handles.thr(1).t_dp_thr = t_dp_thr; 
     handles.thr(1).thr_step = thr_step;
     handles.thr(1).type = par.detection;
     handles.thr(1).ch_id = ch_id;
     handles.thr(1).filename= ['polytrode' num2str(ch1) '_spikes.mat'];
     handles.thr(1).path=path;
-    
+
 handles=draw(handles.data,handles);
 guidata(h,handles);
 disp(' ')
