@@ -110,6 +110,7 @@ plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.colo
 varargout{1} = handles.output;
 
 
+
 % --- Executes on button press in coeff_1_decr_pushbutton.
 function coeff_1_decr_pushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to coeff_1_decr_pushbutton (see GCBO)
