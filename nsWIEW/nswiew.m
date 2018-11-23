@@ -5624,11 +5624,11 @@ if ~isfield(handles,'page')
     return;
 end
 
-prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
+prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
 for i=1:length(handles.page)
     prompt=[prompt, num2str(i), ': ', num2str(handles.page{i}), newline]; %itt is
 end
-answer=inputdlg(prompt,'Channel selection',1,{''});
+answer=inputdlg(prompt,'Polytrode selection',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
         if handles.apage~=1
@@ -5652,23 +5652,19 @@ end
 
 handles.ch1 = ch1;
 handles.ch2 = ch2;
-%korábban volt ez
-%[fname, path]=uigetfile({'*.mat', 'ns_times_polytrode; *.mat'}, 'Select the unit file');
-% if strcmp(fname(end-2:end),'mat'),
-%load([path fname], 'clusters_2_nswiew');
+
 
 %% SUA
 for i = ch1 : ch2
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev) == 2
-        %disp(['times ' num2str(i)]);
         clusters_2_nswiew = wave_clus_2_nswiew(i, filename_log_deblock, path);
 
         handles.SUAs_cluster_class = clusters_2_nswiew; 
         handles.SUAfilename= ['times_polytrode' num2str(i) '.mat'];
         handles.SUApath=path;
-        %ez jo?
-        handles.channel = i;
+        %ez jo? --> polytrode a bemenet
+        handles.polytrode = i;
     end
 end
 
@@ -5676,7 +5672,6 @@ end
 for i = ch1 : ch2
     fajlnev = ['polytrode' num2str(i) '_spikes.mat'];
     if exist(fajlnev) == 2
-        %disp(['noise ' num2str(i)]);
         [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(i, filename_log_deblock, path);
         handles.thr(1).t_dp_thr = t_dp_thr; 
         handles.thr(1).thr_step = thr_step;
@@ -5688,7 +5683,6 @@ for i = ch1 : ch2
 end
 handles=draw(handles.data,handles);
 guidata(h,handles);
-%disp(' ')
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
 user_response = filterdialog('Title','Applying a filter');
@@ -5713,6 +5707,7 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 %még nincs kész
 if ~isempty(handles.SUApath)
     
+
     prompt=['Existing pages:', newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
 for i = handles.ch1 : handles.ch2
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
@@ -5720,6 +5715,7 @@ for i = handles.ch1 : handles.ch2
         prompt=[prompt, ' ', num2str(i)];
     end
 end
+handles
 answer=inputdlg(prompt,'Channels',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
