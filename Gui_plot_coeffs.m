@@ -22,7 +22,7 @@ function varargout = Gui_plot_coeffs(varargin)
 
 % Edit the above text to modify the response to help Gui_plot_coeffs
 
-% Last Modified by GUIDE v2.5 26-Sep-2018 19:09:32
+% Last Modified by GUIDE v2.5 23-Nov-2018 19:51:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -197,7 +197,7 @@ if dim_coeff_2 > 1
     dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    if dim_coeff_1 == handles.no_coeff + 1 || str_coeff_1 == 't'
+    if dim_coeff_1 == handles.no_coeff + 1 || strcmp(str_coeff_1, 't') %str_coeff_1 == 't' volt :)
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     else
@@ -230,7 +230,7 @@ if dim_coeff_2 < handles.no_coeff
     dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    if dim_coeff_1 == handles.no_coeff + 1 || str_coeff_1 == 't'
+    if dim_coeff_1 == handles.no_coeff + 1 || strcmp(str_coeff_1, 't') %str_coeff_1 == 't' volt :)
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     else       
@@ -574,3 +574,26 @@ for i = 1:size(log_deblock_ms,1)
     rectangle('Position',[block_start,yl(1),length_block,(yl(2)-yl(1))],...
         'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
 end
+
+
+% --- Executes on key press with focus on figure1 or any of its controls.
+function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+keypress = eventdata.Key;
+switch keypress
+    case 'rightarrow'
+        coeff_1_incr_pushbutton_Callback(hObject, eventdata, handles);
+    case 'leftarrow'
+        coeff_1_decr_pushbutton_Callback(hObject, eventdata, handles)
+    case 'uparrow'
+        coeff_2_incr_pushbutton_Callback(hObject, eventdata, handles);
+    case 'downarrow'
+        coeff_2_decr_pushbutton_Callback(hObject, eventdata, handles);
+    otherwise  
+end
+guidata(hObject, handles);
