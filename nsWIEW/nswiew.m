@@ -5615,7 +5615,7 @@ function varargout = loadSUA_menu_Callback(h, eventdata, handles)
  
 % Neccessary lines were inserted in function handles=draw(data,handles)
 
-%mappa elérési útvonala
+%mappa eleres
 path = uigetdir;
 %kell ez?
 if ~isempty(path)
@@ -5646,6 +5646,7 @@ end
 ch = str2num(answer{1});
 ch1 = ch(1);
 ch2 = ch(end);
+
 if exist('log_deblock.mat') == 2
 filename_log_deblock = 'log_deblock.mat';
 end
