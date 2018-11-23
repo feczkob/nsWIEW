@@ -13,7 +13,7 @@ factor = 4;
 
 %% Load data, initialize
 load([path '/' 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par')
-load(log_deblock);
+load(log_deblock, 'segments');
 fileID = fopen(['polytrode' num2str(polytrode_n) '.txt'],'r');
 tline = fgetl(fileID);
 tlines = cell(0,1);

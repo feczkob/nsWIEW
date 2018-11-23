@@ -5704,13 +5704,12 @@ txt = (['Do you want to apply a filter with the following parameters?', newline,
 %user_response = filterdialog('Title','Applying a filter', 'String', txt);
 user_response = questdlg(txt,...
     'Applying a filter',...
-    'Yes', 'No', 'Yes');
+    'Yes', ...
+    'No');
 switch user_response
 case 'No'
 case 'Yes'
-   %%esetleg lehetne valami olyat írni, aminek a wave_clus-os kimenetek a
-   %%bemenetei, és a felhasználónak nem kell egyesével kiválasztani mindent
-%varargout = filter_menu_Callback(h, eventdata, handles);
+varargout = filter_menu_Callback(h, eventdata, handles);
 end
 end
 cd(path);
@@ -5723,7 +5722,9 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
+%[filename, pathname] = uigetfile('*.*','Select file');
+%load([pathname filename], 'inspk', 'cluster_class');
+%még nincs kész
 if ~isempty(handles.SUApath)
     
 prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén

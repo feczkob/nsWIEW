@@ -14,7 +14,7 @@ if ~ischar(varargin{1})  % LAUNCH GUI
 
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
-    if nargin>1, handles.phand=varargin{2}; end
+    if nargin>1, handles.phand=varargin{2}; end;
     handles.srate=varargin{1};
 	guidata(fig, handles);
 
@@ -121,11 +121,11 @@ function varargout = zphs_Callback(h, eventdata, handles, varargin)
 
 v=get(h,'value');
 
-if v==0
+if v==0,
     set(handles.order,'string',{'1','2','3','4','5'});
 else
     set(handles.order,'string',{'2','4','6','8','10'});
-end
+end;
 
 % --------------------------------------------------------------------
 function varargout = ok_Callback(h, eventdata, handles, varargin)
@@ -135,20 +135,20 @@ delete(handles.figure1);
 % --------------------------------------------------------------------
 function varargout = deletefcn(h, eventdata, handles, varargin)
 
-if isfield(handles,'responseplot')
+if isfield(handles,'responseplot'),
     delete(handles.responseplot);
-end
+end;
 
-[bb, aa, info]=getfilter(handles);
+[bb aa info]=getfilter(handles);
 
-if isfield(handles,'phand')
+if isfield(handles,'phand'),
     handles.phand.filterset=struct('a',aa,'b',bb,'filtfilt',get(handles.zphs,'value'),'info',info,'rect',get(handles.rect,'value'));
     guidata(handles.phand.figure1,handles.phand);
 else
     global a b infos;
     a=aa; b=bb; infos=info;
     disp('b, a, infos are global');
-end
+end;
 
 
 % --------------------------------------------------------------------
@@ -157,13 +157,13 @@ function [b,a,info]= getfilter(handles)
 vs=get([handles.lp, handles.bp, handles.bs, handles.hp,handles.zphs, handles.order, handles.type, handles.rect],'value');
 frs=get([handles.frb, handles.fra],'string');
 
-if vs{1}               % low pass
+if vs{1},               % low pass
     F=str2num(frs{2})./(handles.srate/2);
     str='low';
-elseif vs{2}           % band pass
+elseif vs{2},           % band pass
     F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
     str='bandpass';
-elseif vs{3}          % band stop
+elseif vs{3},           % band stop
     F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
     str='stop';
 elseif vs{4}            % high pass
