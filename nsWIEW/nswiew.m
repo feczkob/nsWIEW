@@ -1075,7 +1075,8 @@ case 'MAT'
         handles.type2='psth';   
     elseif strcmpi(fname(poi(end)-3:poi(end)-1),'FFT') %és itt is
         handles.type2='fft'; 
-    else handles.type2='';
+    else
+        handles.type2='';
     end
     d=load([path fname]);
     if isfield(d,'handles')
@@ -2047,7 +2048,7 @@ if ~isempty(poi), fn=fn(1:poi(1)-1); end
 fn=[fn type];
 fw=fopen([path fn],'w');
 fwrite(fw,handles.header,'int8');
-if upper(handles.type)~= 'WDQ' %valami nem jó
+if upper(handles.type)~= 'WDQ' 
     fseek(fw,886,-1);
     maxbyte=handles.minbyte+lengt*handles.srate*handles.chnum*handles.databyte;
     fwrite(fw,maxbyte,'int32');
@@ -5616,7 +5617,8 @@ function varargout = loadSUA_menu_Callback(h, eventdata, handles)
 
 %mappa eleres
 path = uigetdir;
-
+%kell ez?
+if ~isempty(path)
 %vizsgálandó csatornák kiválasztása
 if ~isfield(handles,'page')
     return;
@@ -5649,33 +5651,54 @@ if exist('log_deblock.mat') == 2
 filename_log_deblock = 'log_deblock.mat';
 end
 
+handles.ch1 = ch1;
+handles.ch2 = ch2;
 %korábban volt ez
 %[fname, path]=uigetfile({'*.mat', 'ns_times_polytrode; *.mat'}, 'Select the unit file');
 % if strcmp(fname(end-2:end),'mat'),
 %load([path fname], 'clusters_2_nswiew');
 
 %% SUA
-clusters_2_nswiew = wave_clus_2_nswiew(ch1, filename_log_deblock, path);
+for i = ch1 : ch2
+    fajlnev = ['times_polytrode' num2str(i) '.mat'];
+    if exist(fajlnev) == 2
+        %disp(['times ' num2str(i)]);
+        clusters_2_nswiew = wave_clus_2_nswiew(i, filename_log_deblock, path);
 
-handles.SUAs_cluster_class = clusters_2_nswiew; 
-handles.SUAfilename= ['times_polytrode' num2str(ch1) '.mat'];
-handles.SUApath=path;
-handles.channel = ch1;
+        handles.SUAs_cluster_class = clusters_2_nswiew; 
+        handles.SUAfilename= ['times_polytrode' num2str(i) '.mat'];
+        handles.SUApath=path;
+        %ez jo?
+        handles.channel = i;
+    end
+end
 
 %% noise level
-%for i = ch1 : ch2
-%if exist('polytrode' i '_spikes.mat') == 2
-[t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(ch1, filename_log_deblock, path);
-    handles.thr(1).t_dp_thr = t_dp_thr; 
-    handles.thr(1).thr_step = thr_step;
-    handles.thr(1).type = par.detection;
-    handles.thr(1).ch_id = ch_id;
-    handles.thr(1).filename= ['polytrode' num2str(ch1) '_spikes.mat'];
-    handles.thr(1).path=path;
-%end
+for i = ch1 : ch2
+    fajlnev = ['polytrode' num2str(i) '_spikes.mat'];
+    if exist(fajlnev) == 2
+        %disp(['noise ' num2str(i)]);
+        [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(i, filename_log_deblock, path);
+        handles.thr(1).t_dp_thr = t_dp_thr; 
+        handles.thr(1).thr_step = thr_step;
+        handles.thr(1).type = par.detection;
+        handles.thr(1).ch_id = ch_id;
+        handles.thr(1).filename= ['polytrode' num2str(i) '_spikes.mat'];
+        handles.thr(1).path=path;
+    end
+end
 handles=draw(handles.data,handles);
 guidata(h,handles);
-disp(' ')
+%disp(' ')
+
+%% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
+user_response = filterdialog('Title','Applying a filter');
+switch user_response
+case 'No'
+case 'Yes'
+varargout = filter_menu_Callback(h, eventdata, handles);
+end
+end
 cd(path);
 
 
@@ -5690,6 +5713,32 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 %load([pathname filename], 'inspk', 'cluster_class');
 %még nincs kész
 if ~isempty(handles.SUApath)
-    %handles.coeff_vs_coeff_name = ['times_polytrode' handles.channel '.mat'];
-    Gui_plot_coeffs;
+    
+    prompt=['Existing pages:', newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
+for i = handles.ch1 : handles.ch2
+    fajlnev = ['times_polytrode' num2str(i) '.mat'];
+    if exist(fajlnev) == 2
+        prompt=[prompt, ' ', num2str(i)];
+    end
 end
+answer=inputdlg(prompt,'Channels',1,{''});
+if ~isempty(answer)
+    if strcmp(answer{1},'reset')
+        if handles.apage~=1
+            handles.apage=2;
+            handles.page(2)=handles.page(handles.apage);
+            handles.page(3:end)=[];
+        else
+            handles.page(2:end)=[];
+        end
+        handles=draw(handles.data,handles);
+    elseif ~isempty(str2num(answer{1}))
+        handles.page{end+1}=str2num(answer{1});
+    end
+end
+i = str2num(answer{1});
+handles.coeff_vs_coeff_name = ['times_polytrode' i '.mat'];
+Gui_plot_coeffs(i, handles.SUApath);
+end
+guidata(handles);
+

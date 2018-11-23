@@ -54,7 +54,22 @@ function Gui_plot_coeffs_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for Gui_plot_coeffs
 handles.output = hObject;
-
+handles.i = varargin{1};
+handles.pathname = varargin{2};
+handles.filename = ['times_polytrode', num2str(handles.i), '.mat'];
+load([handles.pathname '/' handles.filename], 'inspk', 'cluster_class');
+if  exist([handles.pathname 'log_deblock.mat'], 'file') == 2
+   % fprintf('itt vagyok %.f\n', exist([pathname 'log_deblock.mat'], 'file'));
+    load([handles.pathname 'log_deblock.mat'], 'segments');
+else
+    segments = zeros(2);
+end
+handles.segments = segments;
+handles.inspk = inspk;
+handles.cluster_class = cluster_class;
+handles.no_coeff = size(handles.inspk,2);
+handles.color = 'wave_clus';
+handles.markersize = 8;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -70,40 +85,18 @@ function varargout = Gui_plot_coeffs_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
-
-
-% --- Executes on button press in load_pushbutton.
-function load_pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to load_pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-%path-os betöltés, ha nincs, akkor generálni, log_deblock.mat létrehozása a
-%mappában, üres segments
-%helytálló időskála s-ben
-
-[filename, pathname] = uigetfile('*.*','Select file');
-load([pathname filename], 'inspk', 'cluster_class');
+i = handles.i;
+pathname = handles.pathname;
+filename = handles.filename;
 set(handles.data_text,'String',[pathname filename]);
+set(handles.polytrode_text, 'String', ['Polytrode #' num2str(i)]);
 %én írtam
-if  exist([pathname 'log_deblock.mat'], 'file') == 2
-   % fprintf('itt vagyok %.f\n', exist([pathname 'log_deblock.mat'], 'file'));
-    load([pathname 'log_deblock.mat'], 'segments');
-else
-    segments = zeros(2);
-end
-%eddig
 
-handles.pathname = pathname;
-handles.filename = filename;
-handles.inspk = inspk;
-handles.segments = segments;
-handles.cluster_class = cluster_class;
-handles.no_coeff = size(inspk,2);
-handles.color = 'wave_clus';
-handles.markersize = 8;
+%eddig
+inspk = handles.inspk;
+cluster_class = handles.cluster_class;
+no_coeff = handles.no_coeff;
+
 
 dim_coeff_1 = 1;
 dim_coeff_2 = 2;
@@ -114,9 +107,7 @@ set(handles.coeff_2_edit, 'String', str_coeff_2);
 
 cla
 plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
-
-
-guidata(hObject, handles);
+varargout{1} = handles.output;
 
 
 % --- Executes on button press in coeff_1_decr_pushbutton.
