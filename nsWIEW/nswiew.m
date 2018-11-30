@@ -5626,11 +5626,10 @@ end
 
 prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1
+for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1, ezt be kell olvasni
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
-        %prompt=[prompt, ' ', num2str(i)];
     end
 end
 prompt = [prompt,  sz{1:end-1}];
@@ -5681,21 +5680,9 @@ guidata(h,handles);
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
 load([path '/' 'times_polytrode' num2str(polytrode) '.mat'],'par');
-if par.detect_fmin == par.sort_fmin
     fmin = par.detect_fmin;
-else
-    fmin = [];
-end
-if par.detect_fmax == par.sort_fmax
     fmax = par.detect_fmax;
-else
-    fmax = [];
-end
-if par.detect_order == par.sort_order
     order = par.detect_order;
-else
-    order = [];
-end
 txt = (['Do you want to apply a filter with the following parameters?', newline, ...
     'Min freq: ', num2str(fmin), 'Hz', newline, ...
     'Max freq: ', num2str(fmax), 'Hz', newline, ...

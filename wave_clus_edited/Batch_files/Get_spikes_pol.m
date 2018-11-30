@@ -55,12 +55,12 @@ init_date = now;
 if run_parfor == true
     parfor j = 1:length(polytrodes)
         get_spikes_pol_single(polytrodes(j), par_input);
-        disp(sprintf('%d of %d ''spikes'' files done.',count_new_sp_files(init_date, polytrodes),length(polytrodes)))
+        fprintf('%d of %d ''spikes'' files done.\n',count_new_sp_files(init_date, polytrodes),length(polytrodes))
     end
 else
     for j = 1:length(polytrodes)
         get_spikes_pol_single(polytrodes(j), par_input);
-        disp(sprintf('%d of %d ''spikes'' files done.',count_new_sp_files(init_date, polytrodes),length(polytrodes)))
+        fprintf('%d of %d ''spikes'' files done.\n',count_new_sp_files(init_date, polytrodes),length(polytrodes))
     end
     
 end
@@ -135,7 +135,7 @@ function get_spikes_pol_single(polytrode, par_input)
     
         [spikes, new_index,thr{n}] = amp_detect_pol(x,par); clear x;
         index = [index data_handler_ch{1}.index2ts(new_index)];
-        if length(spikes)~=0
+        if ~isempty(spikes)
             for i=1:n_channels
                 poly_spikes = [poly_spikes spikes(:,1+(i-1)*ls:i*ls)];
             end
