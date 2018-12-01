@@ -195,7 +195,8 @@ case 2                 % finite response
         info=['FIR1 ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
     catch a=[]; b=[]; info='not found'; return;
     end
-case 3                 % elliptic filter % should be added to the filter type options
+case 3
+    %fprintf('Itt vagyok'); % elliptic filter % should be added to the filter type options
    try     [b,a] = ellip(o,0.1,40,F,str); % the settings used by Wave_clus
        info=['Elliptic ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
    catch a=[]; b=[]; info='not found'; return;
