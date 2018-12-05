@@ -5624,17 +5624,16 @@ if ~isfield(handles,'page')
     return;
 end
 
-prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
+prompt=['Select the polytrode', newline, 'Existing pages:', newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1
+for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1, ezt be kell olvasni
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
-        %prompt=[prompt, ' ', num2str(i)];
     end
 end
 prompt = [prompt,  sz{1:end-1}];
-answer=inputdlg(prompt,'Polytrode selection',1,{''});
+answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
         if handles.apage~=1
@@ -5681,36 +5680,171 @@ guidata(h,handles);
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
 load([path '/' 'times_polytrode' num2str(polytrode) '.mat'],'par');
-if par.detect_fmin == par.sort_fmin
     fmin = par.detect_fmin;
-else
-    fmin = [];
-end
-if par.detect_fmax == par.sort_fmax
     fmax = par.detect_fmax;
-else
-    fmax = [];
-end
-if par.detect_order == par.sort_order
     order = par.detect_order;
-else
-    order = [];
-end
+    type = 'Elliptic';
+    zphs = 'zero phase shift';
+    bp = 'bandpass';
 txt = (['Do you want to apply a filter with the following parameters?', newline, ...
     'Min freq: ', num2str(fmin), 'Hz', newline, ...
     'Max freq: ', num2str(fmax), 'Hz', newline, ...
-    'Order: ', num2str(order), newline, ...
-    'Type: ', 'bandpass']);
-%user_response = filterdialog('Title','Applying a filter', 'String', txt);
+    'Order: ', type, ' ', num2str(order) '. order ', zphs, newline, ...
+    'Type: ', bp]);
 user_response = questdlg(txt,...
     'Applying a filter',...
     'Yes', 'No', 'Yes');
 switch user_response
 case 'No'
 case 'Yes'
-   %%esetleg lehetne valami olyat írni, aminek a wave_clus-os kimenetek a
-   %%bemenetei, és a felhasználónak nem kell egyesével kiválasztani mindent
-%varargout = filter_menu_Callback(h, eventdata, handles);
+    switch order
+        case 2
+            order = 1;
+        case 4
+            order = 2;
+        case 6
+            order = 3;
+        case 8
+            order = 4;
+        case 10
+            order = 5;
+    end
+   %%(1:4) bandpass, (5) zphs, (6) order, (7) elliptic
+   vs = {0; 1; 0; 0; 1; order; 3; 0};
+   frs = {num2str(fmin); num2str(fmax)};
+   [b, a, info] = getfilter(vs, frs, handles);
+   handles.filterset=struct('a',a,'b',b,'filtfilt', 1,'info',info,'rect',0);
+   
+   if ~strcmpi(handles.type,'CNT') && ~strcmpi(handles.type,'WDQ') %strcmp volt
+    errordlg('This routine is implemented only for CNT or WDQ file!');
+    return;
+end
+
+if ~isfield(handles,'binx1') || ~isfield(handles,'binx2')
+    begin=0;
+    lengt=handles.maxsec;
+else
+    begin=handles.event{handles.binx1,1}./handles.srate;
+    lengt=handles.event{handles.binx2,1}./handles.srate-begin;
+end
+if lengt>10
+    bb=[0:10:lengt]';
+    bb(end)=[];
+    bl=ones(size(bb))*10;
+    bl(end)=mod(lengt,10)+10;
+else
+    bb=begin;
+    bl=lengt;
+end
+
+% [b a]=butter(4,5/1000,'high'); handles.filter.filtfilt=1;
+
+len = bl*handles.srate;   % length of input
+b = b(:).'; a = a(:).'; nb = length(b); na = length(a); nfilt = max(nb,na);
+nfact = 3*(nfilt-1);  % length of edge transients
+
+if any(len<=nfact)   % input data too short!
+    errordlg('Data must have length more than 3 times filter order.');
+    return;
+end
+
+% set up filter's initial conditions to remove dc offset problems at the 
+% beginning and end of the sequence
+    if nb < nfilt, b(nfilt)=0; end   % zero-pad if necessary
+    if na < nfilt, a(nfilt)=0; end
+% use sparse matrix to solve system of linear equations for initial conditions
+% zi are the steady-state states of the filter b(z)/a(z) in the state-space 
+% implementation of the 'filter' command.
+    rows = [1:nfilt-1  2:nfilt-1  1:nfilt-2];
+    cols = [ones(1,nfilt-1) 2:nfilt-1  2:nfilt-1];
+    da = [1+a(2) a(3:nfilt) ones(1,nfilt-2)  -ones(1,nfilt-2)];
+    sp = sparse(rows,cols,da);
+    zi = sp \ ( b(2:nfilt).' - a(2:nfilt).'*b(1) );
+
+zi1=zi;
+
+%%%%%%%%%%%%%% SETTING UP THE FILE
+%{
+type=['.' handles.type];
+[fn,path] = uiputfile(['*' type],'Give the file name');
+poi=strfind(fn,'.'); %findstr volt
+if ~isempty(poi), fn=fn(1:poi(1)-1); end
+fn=[fn type];
+fw=fopen([path fn],'w');
+fwrite(fw,handles.header,'int8');
+if upper(handles.type)~= 'WDQ' 
+    fseek(fw,886,-1);
+    maxbyte=handles.minbyte+lengt*handles.srate*handles.chnum*handles.databyte;
+    fwrite(fw,maxbyte,'int32');
+end
+fseek(fw,0,1);
+%}
+
+if handles.filterset.filtfilt
+    %ff=fw;
+    fw=fopen('filter.tns','w');
+    fwrite(fw,handles.header,'int8');
+    %fwrite(ff,handles.header,'int8');
+end
+
+%%%%%%%%%%%%%% PROCEED
+
+%indi('0 %');
+
+for i=1:length(bb)
+    %indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
+    hand=inport(bb(i),bl(i),handles);
+    data=hand.data;
+    
+    [fdata, zf]=filter(b,a,data,zi);
+    zi=zf;
+   %{ 
+    switch upper(handles.type)
+    case {'CNT','WDQ'}
+        fwrite(fw,fdata','int16');
+        fwrite(ff,zeros(size(fdata')),'int16');
+    case 'AVG'
+        fwrite(fw,fdata','float32');
+    end
+    %}
+end
+%fclose(fw);
+
+if handles.filterset.filtfilt
+    ft=fopen('filter.tns');
+    zi=zi1;
+    for i=length(bb):-1:1
+        %indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
+        beg=bb(i); len=bl(i);
+        beg=round(beg*1000)/1000;
+        len=round(len*1000)/1000;
+        
+        beg=round(handles.minbyte+beg*handles.chnum*handles.srate*handles.databyte);
+        len=len*handles.chnum*handles.srate;
+        fseek(ft,beg,'bof');
+        data=fread(ft,len,'int16');
+        n=size(data,1);
+        nchn=fix(n/handles.chnum);
+        data(nchn*handles.chnum+1:end)=[];
+        data=reshape(data,handles.chnum,nchn)';
+        data=flip(data,1); %flipdim volt
+        
+        [fdata, zf]=filter(b,a,data,zi);
+        zi=zf;
+        
+        fdata=flip(fdata,1); %flipdim volt
+        
+        switch upper(handles.type)
+        case {'CNT','WDQ'}
+            %fseek(ff,beg,-1);
+            %fwrite(ff,fdata','int16');
+        case 'AVG'
+            fwrite(ff,fdata','float32');
+        end
+    end
+    %fclose(ff);
+    fclose(ft);
+end
 end
 end
 cd(path);
@@ -5726,13 +5860,12 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 
 if ~isempty(handles.SUApath)
     
-prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
+prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
 for i=1:size(cell2mat(handles.page), 2)
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
-        %prompt=[prompt, ' ', num2str(i)];
     end
 end
 prompt = [prompt,  sz{1:end-1}];
@@ -5757,3 +5890,54 @@ Gui_plot_coeffs(polytrode, handles.SUApath);
 end
 guidata(hObject, handles);
 
+
+function [b,a,info]= getfilter(vs, frs, handles)
+
+%vs=get([handles.lp, handles.bp, handles.bs, handles.hp,handles.zphs, handles.order, handles.type, handles.rect],'value');
+%frs=get([handles.frb, handles.fra],'string');
+
+if vs{1}               % low pass
+    F=str2num(frs{2})./(handles.srate/2);
+    str='low';
+elseif vs{2}           % band pass
+    F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
+    str='bandpass';
+elseif vs{3}          % band stop
+    F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
+    str='stop';
+elseif vs{4}            % high pass
+    F=str2num(frs{1})./(handles.srate/2);
+    str='high';
+end
+
+os=[1,2,3,4,5];      % order
+o=os(vs{6});
+
+if ~exist('F')
+    a=[]; b=[];
+    return;
+elseif isempty(F)
+    a=[]; b=[];
+    return;
+end   
+
+zphs={ '', 'zero phase shift '};
+rrrr={ '', ', rectify'};
+switch vs{7}            % type
+case 1                 % butter
+    try [b,a]=butter(o,F,str); 
+        info=['Butterworth ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+    catch a=[]; b=[]; info='not found'; return;
+    end
+case 2                 % finite response
+    try [b,a]=fir1(o,F,str);
+        info=['FIR1 ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+    catch a=[]; b=[]; info='not found'; return;
+    end
+case 3
+     % elliptic filter % should be added to the filter type options
+   try     [b,a] = ellip(o,0.1,40,F,str); % the settings used by Wave_clus
+       info=['Elliptic ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+   catch a=[]; b=[]; info='not found'; return;
+   end
+end

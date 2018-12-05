@@ -12,7 +12,7 @@ function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, lo
 factor = 4;
 
 %% Load data, initialize
-load([path '/' 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par')
+load([path '/' 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par');
 load(log_deblock, 'segments');
 fileID = fopen(['polytrode' num2str(polytrode_n) '.txt'],'r');
 tline = fgetl(fileID);
@@ -29,6 +29,7 @@ no_all_channels = 24;
 % get the length of the data. This should be the same size for all
 % channels, thus loading the first one is sufficient.
 
+%%ezt kell majd átírni
 var_datafile = matfile(tlines{1,1});
 details = whos(var_datafile, 'data');
 if size(details,1) == 0

@@ -5624,17 +5624,16 @@ if ~isfield(handles,'page')
     return;
 end
 
-prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
+prompt=['Select the polytrode', newline, 'Existing pages:', newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1
+for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -1, ezt be kell olvasni
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
-        %prompt=[prompt, ' ', num2str(i)];
     end
 end
 prompt = [prompt,  sz{1:end-1}];
-answer=inputdlg(prompt,'Polytrode selection',1,{''});
+answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
         if handles.apage~=1
@@ -5681,35 +5680,39 @@ guidata(h,handles);
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
 load([path '/' 'times_polytrode' num2str(polytrode) '.mat'],'par');
-if par.detect_fmin == par.sort_fmin
     fmin = par.detect_fmin;
-else
-    fmin = [];
-end
-if par.detect_fmax == par.sort_fmax
     fmax = par.detect_fmax;
-else
-    fmax = [];
-end
-if par.detect_order == par.sort_order
     order = par.detect_order;
-else
-    order = [];
-end
+    type = 'Elliptic';
+    zphs = 'zero phase shift';
+    bp = 'bandpass';
 txt = (['Do you want to apply a filter with the following parameters?', newline, ...
     'Min freq: ', num2str(fmin), 'Hz', newline, ...
     'Max freq: ', num2str(fmax), 'Hz', newline, ...
-    'Order: ', num2str(order), newline, ...
-    'Type: ', 'bandpass']);
-%user_response = filterdialog('Title','Applying a filter', 'String', txt);
+    'Order: ', type, ' ', num2str(order) '. order ', zphs, newline, ...
+    'Type: ', bp]);
 user_response = questdlg(txt,...
     'Applying a filter',...
-    'Yes', ...
-    'No');
+    'Yes', 'No', 'Yes');
 switch user_response
 case 'No'
 case 'Yes'
-varargout = filter_menu_Callback(h, eventdata, handles);
+    % Bandpa
+    switch order
+        case 2
+            order = 1;
+        case 4
+            order = 2;
+        case 6
+            order = 3;
+        case 8
+            order = 4;
+        case 10
+            order = 5;
+    end
+   vs = {0; 1; 0; 0; 1; order; 3; 0} %5. és 8. elem mi?
+   frs = {num2str(fmin), num2str(fmax)}
+   [b, a, info] = getfilter(vs, frs, handles)
 end
 end
 cd(path);
@@ -5722,18 +5725,15 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-%[filename, pathname] = uigetfile('*.*','Select file');
-%load([pathname filename], 'inspk', 'cluster_class');
-%még nincs kész
+
 if ~isempty(handles.SUApath)
     
-prompt=['Existing pages:' newline, 'Type only one number here!', newline]; %char(10) volt a newline helyén
+prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
 for i=1:size(cell2mat(handles.page), 2)
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
-        %prompt=[prompt, ' ', num2str(i)];
     end
 end
 prompt = [prompt,  sz{1:end-1}];
@@ -5758,3 +5758,54 @@ Gui_plot_coeffs(polytrode, handles.SUApath);
 end
 guidata(hObject, handles);
 
+
+function [b,a,info]= getfilter(vs, frs, handles)
+
+%vs=get([handles.lp, handles.bp, handles.bs, handles.hp,handles.zphs, handles.order, handles.type, handles.rect],'value');
+%frs=get([handles.frb, handles.fra],'string');
+
+if vs{1}               % low pass
+    F=str2num(frs{2})./(handles.srate/2);
+    str='low';
+elseif vs{2}           % band pass
+    F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
+    str='bandpass';
+elseif vs{3}          % band stop
+    F=[str2num(frs{1}) str2num(frs{2})]./(handles.srate/2);
+    str='stop';
+elseif vs{4}            % high pass
+    F=str2num(frs{1})./(handles.srate/2);
+    str='high';
+end
+
+os=[1,2,3,4,5];      % order
+o=os(vs{6})
+
+if ~exist('F')
+    a=[]; b=[];
+    return;
+elseif isempty(F)
+    a=[]; b=[];
+    return;
+end   
+
+zphs={ '', 'zero phase shift '};
+rrrr={ '', ', rectify'};
+switch vs{7}            % type
+case 1                 % butter
+    try [b,a]=butter(o,F,str); 
+        info=['Butterworth ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+    catch a=[]; b=[]; info='not found'; return;
+    end
+case 2                 % finite response
+    try [b,a]=fir1(o,F,str);
+        info=['FIR1 ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+    catch a=[]; b=[]; info='not found'; return;
+    end
+case 3
+    %fprintf('Itt vagyok'); % elliptic filter % should be added to the filter type options
+   try     [b,a] = ellip(o,0.1,40,F,str); % the settings used by Wave_clus
+       info=['Elliptic ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
+   catch a=[]; b=[]; info='not found'; return;
+   end
+end
