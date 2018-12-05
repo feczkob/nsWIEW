@@ -5,7 +5,7 @@ function varargout = nswiew(varargin)
 %
 % Daniel Fab� 2003
 
-% Last Modified by GUIDE v2.5 18-Nov-2018 19:47:06
+% Last Modified by GUIDE v2.5 05-Dec-2018 14:24:06
 
 if nargin == 0  % LAUNCH GUI
 
@@ -672,11 +672,20 @@ if ~isfield(handles,'page')
     return;
 end
 
+prompt=['Existing pages:', newline]; %char(10) volt a newline helyén
+sz = strings(size(cell2mat(handles.page)));
+for i=1:size(cell2mat(handles.page), 2)
+        sz(i) = [num2str(i), ' '];
+end
+prompt = [prompt,  sz{1:end}];
+%{
 prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
 for i=1:length(handles.page)
     prompt=[prompt, num2str(i), ': ', num2str(handles.page{i}), newline]; %itt is
 end
+%}
 answer=inputdlg(prompt,'Give a new page layout',1,{''});
+
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
         if handles.apage~=1
@@ -1934,7 +1943,8 @@ msgbox('Ready');
 % --------------------------------------------------------------------
 function varargout = filter_menu_Callback(h, eventdata, handles, varargin)
 
-if strcmp(get(h,'checked'),'on')
+if strcmp((handles.checked), 'on') || strcmp(get(h, 'checked'), 'on') %en irtam
+%if strcmp(get(h,'checked'),'on')
     prompt  = {'1: Erase all the filters; 2: Add new filter.'};
     button=questdlg('Select', ...
                 'Quest', ...
@@ -1956,7 +1966,6 @@ if strcmp(answer{1},'1')
     handles=task_menu_turn_off(h,'task_filter',handles);
     return;
 end
-
 button=questdlg('Apply the filter ...', ...
                 'Select', ...
                 ['only on the display.'],...
@@ -3901,7 +3910,7 @@ msgbox('Not implemented yet - try check off the menu');
 
 % --------------------------------------------------------------------
 function handles=task_menu_turn_off(h, eventdata, handles)
-
+handles.checked = 'off'; %en irtam
 try
     set(h,'checked','off');
 catch
@@ -3935,7 +3944,7 @@ guidata(h,handles);
 
 % --------------------------------------------------------------------
 function handles=task_add(h, eventdata, handles, param)
-
+handles.checked = 'on'; %en irtam
 try
     set(h,'checked','on')
 catch
@@ -5616,7 +5625,9 @@ function varargout = loadSUA_menu_Callback(h, eventdata, handles)
 %mappa eleres
 path = uigetdir;
 
-if ~isempty(path)
+if isempty(path)
+    return;
+end
 %vizsgálandó csatornák kiválasztása
 if ~isfield(handles,'page')
     return;
@@ -5630,7 +5641,7 @@ for i=1:size(cell2mat(handles.page), 2)-1 %polytrode-okat számolunk, azért a -
         sz(i) = [num2str(i), ' '];
     end
 end
-prompt = [prompt,  sz{1:end-1}];
+prompt = [prompt,  sz{1:end}]; %-1: 2 channel, 1 polytrode ?
 answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
@@ -5716,8 +5727,8 @@ case 'Yes'
    %handles.filterset
    handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
    set(h, 'checked', 'on');
+   handles.checked = 'on';
    
-end
 end
 guidata(h,handles);
 %cd(path);
@@ -5734,13 +5745,13 @@ if ~isempty(handles.SUApath)
     
 prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2)
+for i=1:size(cell2mat(handles.page), 2) -1 %2 channel 1 polytrode, azért a -1
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
     end
 end
-prompt = [prompt,  sz{1:end-1}];
+prompt = [prompt,  sz{1:end-1}]; %-1: azért, mert 2 channel 1 polytrode
 answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
