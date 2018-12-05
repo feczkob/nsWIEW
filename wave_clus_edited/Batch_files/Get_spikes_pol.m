@@ -1,4 +1,4 @@
-function Get_spikes_pol(polytrodes, varargin)
+function Get_spikes_pol(polytrodes,pari, varargin)
 % function Get_spikes_pol(polytrodes, par_input)
 % Make polytrode spikes detecting and concatenating the spikes of all the
 % channels in the polytrodeN.txt used. 
@@ -8,11 +8,21 @@ function Get_spikes_pol(polytrodes, varargin)
 
 % par_input must be a struct with some of the detecction parameters. All the
 % parameters included will overwrite the parameters load from set_parameters()
-
+m = matfile('log_deblock.mat');
+h = m.handles;
+pari = [h.fileinfo.folder,'/',pari,'/polytrode_spikes_mat'];
+if exist(pari) == 0
+   mkdir(pari); 
+end
 
 %default config
 par_input = struct;
-parallel = false;
+
+% if length(polytrodes) > 2
+    parallel = true;
+% else
+%     parallel = false;
+% end
 
 %optinal inputs
 nvar = length(varargin);
@@ -37,7 +47,7 @@ run_parfor = parallel;
 if parallel == true
     if exist('matlabpool','file')
         try
-            matlabpool('open');
+            marpool('open');
         catch
             parallel = false;
         end
@@ -53,15 +63,19 @@ end
 
 init_date = now;
 if run_parfor == true
+    tic
     parfor j = 1:length(polytrodes)
         get_spikes_pol_single(polytrodes(j), par_input);
         fprintf('%d of %d ''spikes'' files done.\n',count_new_sp_files(init_date, polytrodes),length(polytrodes))
     end
+    toc
 else
+    tic
     for j = 1:length(polytrodes)
         get_spikes_pol_single(polytrodes(j), par_input);
         fprintf('%d of %d ''spikes'' files done.\n',count_new_sp_files(init_date, polytrodes),length(polytrodes))
     end
+    toc
     
 end
 
@@ -89,10 +103,13 @@ function get_spikes_pol_single(polytrode, par_input)
     spikes_all = [];
     
     % LOAD POLYTRODE CHANNELS
+    m = matfile('log_deblock.mat');
+    h = m.handles;
+    f = h.fileinfo.folder;
     pol = strcat('polytrode',num2str(polytrode),'.txt');
     out_filename = pol(1:end-4);
-    electrodes = textread(pol,'%s');
-    n_channels = length(electrodes);
+    electrodes = m.polytrodes(polytrode,:)';
+    [m,n_channels] = size(m.polytrodes);
     
     data_handler_ch{n_channels} = [];
     par_ch{n_channels} = [];
@@ -100,7 +117,7 @@ function get_spikes_pol_single(polytrode, par_input)
     
     for i=1:n_channels
         par_ch{i} = par;
-        par_ch{i}.filename = electrodes{i};
+        par_ch{i}.filename = electrodes{i,1};
         data_handler_ch{i} = readInData(par_ch{i});
         if ~data_handler_ch{i}.with_raw
         	ME = MException('MyComponent:FileError', 'The file %s doesn''t have raw data',electrodes{i});
@@ -152,10 +169,13 @@ function get_spikes_pol_single(polytrode, par_input)
     par.detection_date =  datestr(now);
 	par.channels = n_channels;
     thr = cell2mat(thr);
+    p = [h.path,'/polytrode_spikes_mat/'];
+    hely = [p out_filename '_spikes'];
 	try
-		save([out_filename '_spikes'], 'spikes', 'index','par','thr')
+		save(hely, 'spikes', 'index','par','thr')
+        
 	catch
-		save([out_filename '_spikes'], 'spikes', 'index','par','thr','-v7.3')
+		save(hely, 'spikes', 'index','par','thr','-v7.3')
 	end
 end
 
