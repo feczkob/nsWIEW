@@ -5674,7 +5674,7 @@ handles.thr(1).filename= ['polytrode' num2str(polytrode) '_spikes.mat'];
 handles.thr(1).path=path;
 
 handles=draw(handles.data,handles);
-guidata(h,handles);
+
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
 load([path '/' 'times_polytrode' num2str(polytrode) '.mat'],'par');
@@ -5715,11 +5715,12 @@ case 'Yes'
    handles.filterset=struct('a',a,'b',b,'filtfilt', 1,'info',info,'rect',0);
    %handles.filterset
    handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
-   
+   set(h, 'checked', 'on');
    
 end
 end
-cd(path);
+guidata(h,handles);
+%cd(path);
 
 
 % --------------------------------------------------------------------
