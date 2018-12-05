@@ -1971,10 +1971,10 @@ else
 end
 
 %%%%%%%%%%%%%% SETTING UP THE FILTER
-
 filtset=filterset(handles.srate,handles);
 waitfor(filtset);
 handles=guidata(handles.figure1);
+
 
 if ~isfield(handles,'filterset')
     errordlg('Error in specifying a filter');
@@ -2014,7 +2014,6 @@ else
 end
 
 % [b a]=butter(4,5/1000,'high'); handles.filter.filtfilt=1;
-
 len = bl*handles.srate;   % length of input
 b = b(:).'; a = a(:).'; nb = length(b); na = length(a); nfilt = max(nb,na);
 nfact = 3*(nfilt-1);  % length of edge transients
@@ -2065,7 +2064,6 @@ end
 %%%%%%%%%%%%%% PROCEED
 
 indi('0 %');
-
 for i=1:length(bb)
     indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
     hand=inport(bb(i),bl(i),handles);
@@ -5696,6 +5694,7 @@ user_response = questdlg(txt,...
     'Yes', 'No', 'Yes');
 switch user_response
 case 'No'
+    return;
 case 'Yes'
     switch order
         case 2
@@ -5714,141 +5713,13 @@ case 'Yes'
    frs = {num2str(fmin); num2str(fmax)};
    [b, a, info] = getfilter(vs, frs, handles);
    handles.filterset=struct('a',a,'b',b,'filtfilt', 1,'info',info,'rect',0);
+   %handles.filterset
+   handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
    
-   if ~strcmpi(handles.type,'CNT') && ~strcmpi(handles.type,'WDQ') %strcmp volt
-    errordlg('This routine is implemented only for CNT or WDQ file!');
-    return;
-end
-
-if ~isfield(handles,'binx1') || ~isfield(handles,'binx2')
-    begin=0;
-    lengt=handles.maxsec;
-else
-    begin=handles.event{handles.binx1,1}./handles.srate;
-    lengt=handles.event{handles.binx2,1}./handles.srate-begin;
-end
-if lengt>10
-    bb=[0:10:lengt]';
-    bb(end)=[];
-    bl=ones(size(bb))*10;
-    bl(end)=mod(lengt,10)+10;
-else
-    bb=begin;
-    bl=lengt;
-end
-
-% [b a]=butter(4,5/1000,'high'); handles.filter.filtfilt=1;
-
-len = bl*handles.srate;   % length of input
-b = b(:).'; a = a(:).'; nb = length(b); na = length(a); nfilt = max(nb,na);
-nfact = 3*(nfilt-1);  % length of edge transients
-
-if any(len<=nfact)   % input data too short!
-    errordlg('Data must have length more than 3 times filter order.');
-    return;
-end
-
-% set up filter's initial conditions to remove dc offset problems at the 
-% beginning and end of the sequence
-    if nb < nfilt, b(nfilt)=0; end   % zero-pad if necessary
-    if na < nfilt, a(nfilt)=0; end
-% use sparse matrix to solve system of linear equations for initial conditions
-% zi are the steady-state states of the filter b(z)/a(z) in the state-space 
-% implementation of the 'filter' command.
-    rows = [1:nfilt-1  2:nfilt-1  1:nfilt-2];
-    cols = [ones(1,nfilt-1) 2:nfilt-1  2:nfilt-1];
-    da = [1+a(2) a(3:nfilt) ones(1,nfilt-2)  -ones(1,nfilt-2)];
-    sp = sparse(rows,cols,da);
-    zi = sp \ ( b(2:nfilt).' - a(2:nfilt).'*b(1) );
-
-zi1=zi;
-
-%%%%%%%%%%%%%% SETTING UP THE FILE
-%{
-type=['.' handles.type];
-[fn,path] = uiputfile(['*' type],'Give the file name');
-poi=strfind(fn,'.'); %findstr volt
-if ~isempty(poi), fn=fn(1:poi(1)-1); end
-fn=[fn type];
-fw=fopen([path fn],'w');
-fwrite(fw,handles.header,'int8');
-if upper(handles.type)~= 'WDQ' 
-    fseek(fw,886,-1);
-    maxbyte=handles.minbyte+lengt*handles.srate*handles.chnum*handles.databyte;
-    fwrite(fw,maxbyte,'int32');
-end
-fseek(fw,0,1);
-%}
-
-if handles.filterset.filtfilt
-    %ff=fw;
-    fw=fopen('filter.tns','w');
-    fwrite(fw,handles.header,'int8');
-    %fwrite(ff,handles.header,'int8');
-end
-
-%%%%%%%%%%%%%% PROCEED
-
-%indi('0 %');
-
-for i=1:length(bb)
-    %indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
-    hand=inport(bb(i),bl(i),handles);
-    data=hand.data;
-    
-    [fdata, zf]=filter(b,a,data,zi);
-    zi=zf;
-   %{ 
-    switch upper(handles.type)
-    case {'CNT','WDQ'}
-        fwrite(fw,fdata','int16');
-        fwrite(ff,zeros(size(fdata')),'int16');
-    case 'AVG'
-        fwrite(fw,fdata','float32');
-    end
-    %}
-end
-%fclose(fw);
-
-if handles.filterset.filtfilt
-    ft=fopen('filter.tns');
-    zi=zi1;
-    for i=length(bb):-1:1
-        %indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
-        beg=bb(i); len=bl(i);
-        beg=round(beg*1000)/1000;
-        len=round(len*1000)/1000;
-        
-        beg=round(handles.minbyte+beg*handles.chnum*handles.srate*handles.databyte);
-        len=len*handles.chnum*handles.srate;
-        fseek(ft,beg,'bof');
-        data=fread(ft,len,'int16');
-        n=size(data,1);
-        nchn=fix(n/handles.chnum);
-        data(nchn*handles.chnum+1:end)=[];
-        data=reshape(data,handles.chnum,nchn)';
-        data=flip(data,1); %flipdim volt
-        
-        [fdata, zf]=filter(b,a,data,zi);
-        zi=zf;
-        
-        fdata=flip(fdata,1); %flipdim volt
-        
-        switch upper(handles.type)
-        case {'CNT','WDQ'}
-            %fseek(ff,beg,-1);
-            %fwrite(ff,fdata','int16');
-        case 'AVG'
-            fwrite(ff,fdata','float32');
-        end
-    end
-    %fclose(ff);
-    fclose(ft);
-end
+   
 end
 end
 cd(path);
-
 
 
 % --------------------------------------------------------------------
