@@ -1971,10 +1971,12 @@ else
 end
 
 %%%%%%%%%%%%%% SETTING UP THE FILTER
-
+n = 1;
 filtset=filterset(handles.srate,handles);
+fprintf('%.0f,\n', n); n = n + 1;
 waitfor(filtset);
 handles=guidata(handles.figure1);
+fprintf('%.0f\n', n); n = n + 1;
 
 if ~isfield(handles,'filterset')
     errordlg('Error in specifying a filter');
@@ -1982,6 +1984,8 @@ if ~isfield(handles,'filterset')
 end
 
 if strcmp(answer{1},'1')
+    fprintf('%.0f\n', n); n = n + 1;
+    %handles.filterset
     handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
     return;
 end
@@ -2014,7 +2018,6 @@ else
 end
 
 % [b a]=butter(4,5/1000,'high'); handles.filter.filtfilt=1;
-
 len = bl*handles.srate;   % length of input
 b = b(:).'; a = a(:).'; nb = length(b); na = length(a); nfilt = max(nb,na);
 nfact = 3*(nfilt-1);  % length of edge transients
@@ -2065,7 +2068,6 @@ end
 %%%%%%%%%%%%%% PROCEED
 
 indi('0 %');
-
 for i=1:length(bb)
     indi([num2str(round((bb(i)-bb(1))/lengt*100)) ' %']);
     hand=inport(bb(i),bl(i),handles);
@@ -5696,8 +5698,8 @@ user_response = questdlg(txt,...
     'Yes', 'No', 'Yes');
 switch user_response
 case 'No'
+    return;
 case 'Yes'
-    % Bandpa
     switch order
         case 2
             order = 1;
@@ -5710,9 +5712,15 @@ case 'Yes'
         case 10
             order = 5;
     end
-   vs = {0; 1; 0; 0; 1; order; 3; 0} %5. és 8. elem mi?
-   frs = {num2str(fmin), num2str(fmax)}
-   [b, a, info] = getfilter(vs, frs, handles)
+   %%(1:4) bandpass, (5) zphs, (6) order, (7) elliptic
+   vs = {0; 1; 0; 0; 1; order; 3; 0};
+   frs = {num2str(fmin); num2str(fmax)};
+   [b, a, info] = getfilter(vs, frs, handles);
+   handles.filterset=struct('a',a,'b',b,'filtfilt', 1,'info',info,'rect',0);
+   %handles.filterset
+   handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
+   
+   
 end
 end
 cd(path);
@@ -5779,7 +5787,7 @@ elseif vs{4}            % high pass
 end
 
 os=[1,2,3,4,5];      % order
-o=os(vs{6})
+o=os(vs{6});
 
 if ~exist('F')
     a=[]; b=[];
@@ -5803,7 +5811,7 @@ case 2                 % finite response
     catch a=[]; b=[]; info='not found'; return;
     end
 case 3
-    %fprintf('Itt vagyok'); % elliptic filter % should be added to the filter type options
+     % elliptic filter % should be added to the filter type options
    try     [b,a] = ellip(o,0.1,40,F,str); % the settings used by Wave_clus
        info=['Elliptic ', num2str(o), '.order, ',zphs{vs{5}+1}, num2str(F*(handles.srate/2)), ' Hz ', str,rrrr{vs{8}+1}];
    catch a=[]; b=[]; info='not found'; return;
