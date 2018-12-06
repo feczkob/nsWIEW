@@ -753,7 +753,7 @@ end
 if isempty(varargin)==1
     [fname, path, findex]=uigetfile(typsel,'Select the data file');
 else
-    fname=varargin{1}{2}; % inputban a varargin hely�n megadni a file teljes el�r�si �tvonal�t,�gy:  { strcat(folderName,  '\'), fnametrc{F} }
+    fname=varargin{1}{2}; % inputban a varargin helyen megadni a file teljes eleresi utvonalat,igy:  { strcat(folderName,  '\'), fnametrc{F} }
     path=varargin{1}{1};
     findex=1;
 end
@@ -1233,6 +1233,7 @@ set(handles.flength,'string',num2str(handles.maxsec));
 set(handles.wsize,'string',num2str(lengt));
 
 %%%% EVALUATE INPORT, and DRAW %%%%%%%%
+handles.checked = 'off'; %en irtam ide
 
 handles=inport(handles.inx1,lengt,handles); 
 handles=draw(handles.data,handles);
@@ -5695,7 +5696,7 @@ load([path '/' 'times_polytrode' num2str(polytrode) '.mat'],'par');
     type = 'Elliptic';
     zphs = 'zero phase shift';
     bp = 'bandpass';
-txt = (['Do you want to apply a filter with the following parameters?', newline, ...
+txt = (['Do you want to replace existing filters with the following one used by wave_clus?', newline, ...
     'Min freq: ', num2str(fmin), 'Hz', newline, ...
     'Max freq: ', num2str(fmax), 'Hz', newline, ...
     'Order: ', type, ' ', num2str(order) '. order ', zphs, newline, ...
@@ -5707,6 +5708,7 @@ switch user_response
 case 'No'
     return;
 case 'Yes'
+    handles=task_menu_turn_off(h,'task_filter',handles); %%még nézd át otthon!
     switch order
         case 2
             order = 1;
@@ -5726,8 +5728,6 @@ case 'Yes'
    handles.filterset=struct('a',a,'b',b,'filtfilt', 1,'info',info,'rect',0);
    %handles.filterset
    handles=task_menu_add(h,{'inport','task_filter'},handles,handles.filterset);
-   set(h, 'checked', 'on');
-   handles.checked = 'on';
    
 end
 guidata(h,handles);
