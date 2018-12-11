@@ -58,9 +58,8 @@ handles.i = varargin{1};
 handles.pathname = varargin{2};
 handles.filename = ['times_polytrode', num2str(handles.i), '.mat'];
 load([handles.pathname '/' handles.filename], 'inspk', 'cluster_class');
-if  exist([handles.pathname 'log_deblock.mat'], 'file') == 2
-   % fprintf('itt vagyok %.f\n', exist([pathname 'log_deblock.mat'], 'file'));
-    load([handles.pathname 'log_deblock.mat'], 'segments');
+if  exist([handles.pathname '/log_deblock.mat'], 'file') == 2
+    load([handles.pathname '/log_deblock.mat'], 'segments');
 else
     segments = zeros(2);
 end
