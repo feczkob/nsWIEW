@@ -27,6 +27,6 @@ times_end = times_real + par.w_post;
 clusters_2_nswiew = [cluster_class(:,1), times_start, times_real, times_end];
 
 %% Save the data: not needed
-%save(['ns_' times_polytrode_n], 'clusters_2_nswiew');
+save(['ns_times_polytrode' times_polytrode_n], 'clusters_2_nswiew');
 end
 

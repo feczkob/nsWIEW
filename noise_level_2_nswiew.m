@@ -96,6 +96,6 @@ for i = 1:size(log_deblock,1)
     %    'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
 end
 %% save the data: not needed
-%save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
+save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
 end
 

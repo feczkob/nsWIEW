@@ -1,8 +1,8 @@
 function par = set_parameters() 
  
 % LOAD PARAMS 
-par.segments_length = 1/6;             % length (in minutes) of segments in which the data is cutted (default 5min). 
-par.sr = 20000;                      % sampling rate (in Hz). This parameter will be only used if the data file don't have a sr. 
+par.segments_length = 5;             % length (in minutes) of segments in which the data is cutted (default 5min). 
+par.sr = 30000;                      % sampling rate (in Hz). This parameter will be only used if the data file don't have a sr. 
  
  
 % PLOTTING PARAMETERS 
@@ -17,7 +17,7 @@ par.plot_feature_stats = false;
  
 % SPC PARAMETERS 
 par.mintemp = 0.00;                  % minimum temperature for SPC 
-par.maxtemp = 0.301;                 % maximum temperature for SPC 
+par.maxtemp = 0.251;                 % maximum temperature for SPC 
 par.tempstep = 0.01;                 % temperature steps 
 par.SWCycles = 100;                  % SPC iterations for each temperature (default 100) 
 par.KNearNeighb = 11;                % number of nearest neighbors for SPC 
@@ -37,19 +37,19 @@ par.tmax = 'all';                    % maximum time to load
 par.tmin= 0;                         % starting time for loading (in sec) 
 par.w_pre = 20;                      % number of pre-event data points stored (default 20) 
 par.w_post = 44;                     % number of post-event data points stored (default 44)) 
-par.alignment_window = 20;           % number of points around the sample expected to be the maximum 
+par.alignment_window = 10;           % number of points around the sample expected to be the maximum 
 par.stdmin = 5;                      % minimum threshold for detection 
-par.stdmax = 10;                     % maximum threshold for detection 
-par.detect_fmin = 500;               % high pass filter for detection 
+par.stdmax = 50;                     % maximum threshold for detection 
+par.detect_fmin = 300;               % high pass filter for detection 
 par.detect_fmax = 3000;              % low pass filter for detection (default 1000) 
 par.detect_order = 4;                % filter order for detection 
-par.sort_fmin = 500;                 % high pass filter for sorting 
+par.sort_fmin = 300;                 % high pass filter for sorting 
 par.sort_fmax = 3000;                % low pass filter for sorting (default 3000) 
-par.sort_order = 4;                  % filter order for sorting 
+par.sort_order = 2;                  % filter order for sorting 
 par.ref_ms = 1.5;                    % detector dead time, minimum refractory period (in ms) 
-%par.detection = 'pos';               % type of threshold ('pos','neg','both') 
+par.detection = 'pos';               % type of threshold ('pos','neg','both') 
 % par.detection = 'neg'; 
-par.detection = 'both'; 
+% par.detection = 'both'; 
  
 % INTERPOLATION PARAMETERS 
 par.int_factor = 5;                  % interpolation factor 
@@ -73,7 +73,7 @@ par.template_k_min = 10;            % min # of nn for vote
 par.template_type = 'center';       % nn, center, ml, mahal 
 par.force_feature = 'spk';          % feature use for forcing (whole spike shape) 
 %par.force_feature = 'wav';         % feature use for forcing (wavelet coefficients). 
-par.force_auto = false;              %automatically force membership (only for batch scripts). 
+par.force_auto = true;              %automatically force membership (only for batch scripts). 
  
 % TEMPLATE MATCHING 
 par.match = 'y';                    % for template matching 
@@ -85,16 +85,4 @@ par.permut = 'y';                   % for selection of random 'par.max_spk' spik
 % HISTOGRAM PARAMETERS 
 par.nbins = 100;                    % # of bins for the ISI histograms 
 par.bin_step = 1;                   % percentage number of bins to plot 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
