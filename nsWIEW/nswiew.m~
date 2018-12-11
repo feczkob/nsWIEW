@@ -5638,15 +5638,15 @@ filename_log_deblock = 'log_deblock.mat';
 end
 
 load([path, filesep, filename_log_deblock], 'polytrodes');
-prompt=['Select the polytrode', newline, 'Existing pages:', newline]; 
+prompt=['Select the polytrode', newline, 'Existing pages:', newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2)-size(polytrodes, 2) + 1
+for i=1:size(cell2mat(handles.page), 2)-size(polytrodes, 2) + 1 %polytrode-okat számolunk, azért a -1, ezt be kell olvasni
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
     end
 end
-prompt = [prompt,  sz{1:end}]; 
+prompt = [prompt,  sz{1:end}]; %-1: 2 channel, 1 polytrode ?
 answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')
@@ -5673,7 +5673,6 @@ clusters_2_nswiew = wave_clus_2_nswiew(polytrode, filename_log_deblock, path);
 handles.SUAs_cluster_class = clusters_2_nswiew; 
 handles.SUApath=path;
 handles.polytrode = polytrode;
-handles.filename_log_deblock = filename_log_deblock;
 
 
 %% noise level
@@ -5689,7 +5688,7 @@ handles=draw(handles.data,handles);
 
 
 %% Filter: ha felrakom a filtert, akkor nem pipálja még ki a Transform -> filter fülnél
-load([path, filesep, 'Times_polytrodes', filesep,...
+load([path filesep, 'Times_polytrodes', filesep,...
     'times_polytrode' num2str(polytrode) '.mat'],'par');
     fmin = par.detect_fmin;
     fmax = par.detect_fmax;
@@ -5707,7 +5706,7 @@ user_response = questdlg(txt,...
     'Yes', 'No', 'Yes');
 switch user_response
 case 'No'
-    
+    return;
 case 'Yes'
     handles=task_menu_turn_off(h,'task_filter',handles); %%még nézd át otthon!
     switch order
@@ -5741,17 +5740,18 @@ function gui_coeffs_vs_coeffs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
 if ~isempty(handles.SUApath)
-load([handles.SUApath, filesep, handles.filename_log_deblock], 'polytrodes');
-prompt=['Existing pages:' newline];
+    
+prompt=['Existing pages:' newline]; %char(10) volt a newline helyén
 sz = strings(size(cell2mat(handles.page)));
-for i=1:size(cell2mat(handles.page), 2) - size(polytrodes, 2) + 1
+for i=1:size(cell2mat(handles.page), 2) -1 %2 channel 1 polytrode, azért a -1
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
     if exist(fajlnev, 'file') == 2
         sz(i) = [num2str(i), ' '];
     end
 end
-prompt = [prompt,  sz{1:end- size(polytrodes, 2) + 1}]; %%
+prompt = [prompt,  sz{1:end-1}]; %-1: azért, mert 2 channel 1 polytrode
 answer=inputdlg(prompt,'Polytrodes',1,{''});
 if ~isempty(answer)
     if strcmp(answer{1},'reset')

@@ -59,14 +59,11 @@ handles.pathname = varargin{2};
 handles.filename = ['times_polytrode', num2str(handles.i), '.mat'];
 load([handles.pathname, filesep, 'Times_polytrodes',...
     filesep, handles.filename], 'inspk', 'cluster_class');
-
-c = who('-file', [handles.pathname, filesep, 'log_deblock.mat']);
-if any(strcmp(c,'segments'))
-    load([handles.pathname, filesep, 'log_deblock.mat'], 'segments');
+if  exist([handles.pathname, filesep, log_deblock.mat'], 'file') == 2
+    load([handles.pathname, log_deblock.mat'], 'segments');
 else
     segments = zeros(2);
 end
-
 handles.segments = segments;
 handles.inspk = inspk;
 handles.cluster_class = cluster_class;

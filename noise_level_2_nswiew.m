@@ -1,4 +1,4 @@
-function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, log_deblock, path)
+function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, filename_log_deblock, path)
 % Create a variable, that contains the noise levels for each
 % channel and also the corresponding time vector.
 % Both should take a stepfunction form.
@@ -12,9 +12,11 @@ function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, lo
 factor = 4;
 
 %% Load data, initialize
-load([path '/' 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par');
-load(log_deblock, 'segments');
-fileID = fopen(['polytrode' num2str(polytrode_n) '.txt'],'r');
+load([path, filesep, 'Polytrode_spikes',...
+    filesep 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par');
+load([path, filesep, filename_log_deblock]);
+fileID = fopen([path, filesep, 'Polytrodes', filesep, ...
+    'polytrode' num2str(polytrode_n) '.txt'],'r');
 tline = fgetl(fileID);
 tlines = cell(0,1);
 while ischar(tline)
@@ -65,7 +67,12 @@ t_step = t_rshp(2:end-1)';
 
 %%   We have to shift the elements of t_step using log_deblock
 t_dp_thr = t_step;
-log_deblock = segments;
+c = who('-file', [path, filesep, filename_log_deblock]);
+if any(strcmp(c,'segments'))
+    log_deblock = segments; % in datapoints (sr = 20000 Hz)
+else
+    log_deblock = [];
+end
 for i = 1:size(log_deblock,1)
         % get start and endpoint for deblocking
         block_start = log_deblock(i,1);

@@ -3,10 +3,16 @@ function [clusters_2_nswiew] = wave_clus_2_nswiew(times_polytrode_n, filename_lo
 % reconstruct the real time_scale in dp
 % as 2 additional columns add the start and end time of the spike
 %% Load the data:
-load([path '/' 'times_polytrode' num2str(times_polytrode_n) '.mat'],'cluster_class', 'par');
-load(filename_log_deblock);
+load([path, filesep, 'Times_polytrodes', filesep, ...
+    'times_polytrode', num2str(times_polytrode_n), '.mat'],'cluster_class', 'par');
+load([path, filesep, filename_log_deblock]);
 %% Initialize:
-log_deblock = segments; % in datapoints (sr = 20000 Hz)
+c = who('-file', [path, filesep, filename_log_deblock]);
+if any(strcmp(c,'segments'))
+    log_deblock = segments; % in datapoints (sr = 20000 Hz)
+else
+    log_deblock = [];
+end
 srate = par.sr;
 times_dp = round(cluster_class(:,2)/1000*srate);
 
@@ -27,6 +33,6 @@ times_end = times_real + par.w_post;
 clusters_2_nswiew = [cluster_class(:,1), times_start, times_real, times_end];
 
 %% Save the data: not needed
-save(['ns_times_polytrode' times_polytrode_n], 'clusters_2_nswiew');
+%save(['ns_times_polytrode' times_polytrode_n], 'clusters_2_nswiew');
 end
 
