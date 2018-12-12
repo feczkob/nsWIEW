@@ -5642,7 +5642,7 @@ prompt=['Select the polytrode', newline, 'Existing pages:', newline];
 sz = strings(size(cell2mat(handles.page)));
 for i=1:size(cell2mat(handles.page), 2)-size(polytrodes, 2) + 1
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
-    if exist(fajlnev, 'file') == 2
+    if exist([path, filesep, 'Times_polytrodes', filesep, fajlnev], 'file') == 2
         sz(i) = [num2str(i), ' '];
     end
 end
@@ -5747,7 +5747,7 @@ prompt=['Existing pages:' newline];
 sz = strings(size(cell2mat(handles.page)));
 for i=1:size(cell2mat(handles.page), 2) - size(polytrodes, 2) + 1
     fajlnev = ['times_polytrode' num2str(i) '.mat'];
-    if exist(fajlnev, 'file') == 2
+    if exist([handles.SUApath, filesep, 'Times_polytrodes', filesep, fajlnev], 'file') == 2
         sz(i) = [num2str(i), ' '];
     end
 end
