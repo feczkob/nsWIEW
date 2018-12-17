@@ -31,7 +31,7 @@ no_all_channels = 24;
 % get the length of the data. This should be the same size for all
 % channels, thus loading the first one is sufficient.
 
-%%ezt kell majd átírni
+
 var_datafile = matfile(tlines{1,1});
 details = whos(var_datafile, 'data');
 if size(details,1) == 0
