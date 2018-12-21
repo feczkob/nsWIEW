@@ -25,7 +25,7 @@ while ischar(tline)
 end
 fclose(fileID);
 
-no_channels = size(tlines,1); %Baluéból olvasd be (number of channels)
+no_channels = size(tlines,1);
 ch_id = [1:no_channels] + polytrode_n - 1; 
 no_all_channels = 24; %Baluéból olvasd be
 % get the length of the data. This should be the same size for all
@@ -103,6 +103,6 @@ for i = 1:size(log_deblock,1)
     %    'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
 end
 %% save the data: not needed
-%save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
+save(['ns_thr_polytrode' num2str(polytrode_n) '.mat'], 't_dp_thr', 'thr_step', 'ch_id', 'par');
 end
 
