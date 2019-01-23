@@ -12,9 +12,16 @@ function [t_dp_thr, thr_step, ch_id, par] = noise_level_2_nswiew(polytrode_n, fi
 factor = 4;
 
 %% Load data, initialize
-load([path, filesep, 'Polytrode_spikes',...
-    filesep 'polytrode' num2str(polytrode_n) '_spikes.mat'], 'thr', 'par');
-load([path, filesep, filename_log_deblock]);
+
+m = matfile([path, filesep , 'Polytrode_spikes', filesep,...
+    'polytrode', num2str(polytrode_n), '_spikes.mat']);
+thr = m.thr;
+par = m.par;
+
+k = matfile([path, filesep, filename_log_deblock]);
+handles = k.handles;
+chnum = handles.chnum;
+
 fileID = fopen([path, filesep, 'Polytrodes', filesep, ...
     'polytrode' num2str(polytrode_n) '.txt'],'r');
 tline = fgetl(fileID);
@@ -25,9 +32,10 @@ while ischar(tline)
 end
 fclose(fileID);
 
-no_channels = size(tlines,1); %Baluéból olvasd be (number of channels)
+%no_channels = size(tlines,1); %Baluéból olvasd be (number of channels)
+no_channels = par.channels;
 ch_id = [1:no_channels] + polytrode_n - 1; 
-no_all_channels = 24; %Baluéból olvasd be
+no_all_channels = chnum; 
 % get the length of the data. This should be the same size for all
 % channels, thus loading the first one is sufficient.
 
@@ -69,7 +77,7 @@ t_step = t_rshp(2:end-1)';
 t_dp_thr = t_step;
 c = who('-file', [path, filesep, filename_log_deblock]);
 if any(strcmp(c,'segments'))
-    log_deblock = segments; 
+    log_deblock = k.segments; 
 else
     log_deblock = [];
 end
